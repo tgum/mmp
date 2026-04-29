@@ -1,0 +1,13 @@
+[project]
+name = "minimusicplayer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "audioop-lts>=0.2.2",
+    "pyaudio>=0.2.14",
+    "pydub>=0.25.1",
+    "tinytag>=2.2.1",
+    "tkinterdnd2>=0.4.3",
+]
