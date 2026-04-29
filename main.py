@@ -37,6 +37,8 @@ previous_image = tk.PhotoImage(file="previous.png")
 pause_image = tk.PhotoImage(file="pause.png")
 play_image = tk.PhotoImage(file="play.png")
 next_image = tk.PhotoImage(file="next.png")
+open_playlist_image = tk.PhotoImage(file="openplaylist.png")
+close_playlist_image = tk.PhotoImage(file="closeplaylist.png")
 
 mainframe = ttk.Frame(root, padding=5)
 mainframe.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
@@ -262,13 +264,16 @@ def show_hide_playlist():
     pl_shown = not pl_shown
     if pl_shown:
         playlist_frame.grid(row=7, column=1, sticky="NSEW")
+        show_hide_playlist_button["image"] = close_playlist_image
     else:
         playlist_frame.grid_forget()
+        show_hide_playlist_button["image"] = open_playlist_image
 
 
 show_hide_playlist_button = ttk.Button(
-    mainframe, text="pl", command=show_hide_playlist
-).grid(row=6, column=1, sticky="W")
+    mainframe, image=open_playlist_image, command=show_hide_playlist
+)
+show_hide_playlist_button.grid(row=6, column=1, sticky="W")
 
 
 stream = None
