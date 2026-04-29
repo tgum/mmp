@@ -112,9 +112,9 @@ def filedropped(e):
     if len(newplaylist) > 0:
         playlist = newplaylist
 
-    playlistindex = 0
+        playlistindex = 0
 
-    play_file(playlist[playlistindex])
+        play_file(playlist[playlistindex])
 
     # play_file(e.data)
 
