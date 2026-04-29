@@ -187,6 +187,7 @@ def pause():
         paused = True
         stream.stop_stream()
         playpause_button["image"] = play_image
+    updateplaylistview()
 
 
 def play():
@@ -195,6 +196,7 @@ def play():
         paused = False
         stream.start_stream()
         playpause_button["image"] = pause_image
+    updateplaylistview()
 
 
 previous_button = ttk.Button(controls_frame, image=previous_image, command=previoussong)
@@ -203,6 +205,71 @@ playpause_button = ttk.Button(controls_frame, image=play_image, command=playpaus
 playpause_button.grid(row=1, column=2)
 next_button = ttk.Button(controls_frame, image=next_image, command=nextsong)
 next_button.grid(row=1, column=3)
+
+
+playlist_frame = ttk.Frame(mainframe, padding=0)
+frame(playlist_frame)
+ttk.Label(playlist_frame, text="Playlist:", font="TkHeadingFont").grid(sticky="W")
+
+playlistview = ttk.Treeview(
+    playlist_frame,
+    columns=("playing", "file", "folder", "index"),
+    show="headings",
+    displaycolumns=("playing", "file"),
+)
+playlistview.column("playing", width=15)
+playlistview.column("file")
+playlistview.heading("file", text="File")
+playlistview.heading("folder", text="Folder")
+playlistview.grid(sticky="nesw")
+playlistview.insert("", "end", values=(">", "nice guys"))
+
+
+def itemClick(e):
+    global playlistindex
+    playlistindex = int(playlistview.set(playlistview.focus(), "index")) - 1
+    nextsong()
+
+
+playlistview.tag_bind("ttk", "<Double-1>", itemClick)
+
+pl_shown = False
+
+
+def updateplaylistview():
+    for child in playlistview.get_children():
+        playlistview.delete(child)
+
+    index = 0
+    for song in playlist:
+        filename = song.split("/")[-1]
+        folder = song.removesuffix(filename)
+        char = ""
+        if index == playlistindex:
+            if paused:
+                char = "||"
+            else:
+                char = ">"
+
+        playlistview.insert(
+            "", "end", values=(char, filename, folder, index), tags=("ttk",)
+        )
+        index += 1
+
+
+def show_hide_playlist():
+    global pl_shown
+    pl_shown = not pl_shown
+    if pl_shown:
+        playlist_frame.grid(row=7, column=1, sticky="NSEW")
+    else:
+        playlist_frame.grid_forget()
+
+
+show_hide_playlist_button = ttk.Button(
+    mainframe, text="pl", command=show_hide_playlist
+).grid(row=6, column=1, sticky="W")
+
 
 stream = None
 
@@ -220,7 +287,7 @@ def play_file(file):
 
     print("loading tags")
     tags = TinyTag.get(file)
-    song_title.set(tags.title)
+    song_title.set(str(tags.track) + " - " + tags.title)
     song_artist.set(tags.artist)
     song_album.set(tags.album)
     print("tags loaded")
