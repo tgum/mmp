@@ -1,5 +1,7 @@
 from pprint import pprint
 import time
+from os import listdir
+import os.path
 
 import tkinter as tk
 from tkinter import ttk
@@ -64,6 +66,8 @@ ttk.Label(
     anchor="center",
 ).grid(column=1, row=1)
 
+ttk.Label(artist_album_frame, text=" - ").grid(column=2, row=1)
+
 song_album = tk.StringVar()
 ttk.Label(artist_album_frame, textvariable=song_album, padding=5, anchor="center").grid(
     column=3, row=1
@@ -92,22 +96,40 @@ def split_files(files):
     return output
 
 
+def extractfiles(dircontents, depth=0):
+    music_extentions = ["mp3", "flac", "wav", "ogg"]
+
+    newplaylist = []
+    dirs = []
+    for file in dircontents:
+        is_music = False
+        for extention in music_extentions:
+            if file.endswith("." + extention) and os.path.isfile(file):
+                is_music = True
+        if is_music:
+            newplaylist.append(file)
+        if os.path.isdir(file):
+            dirs.append(file)
+
+    newplaylist.sort()
+
+    dirs.sort()
+    for dir in dirs:
+        if not dir.endswith("/"):
+            dir += "/"
+        files = map(lambda x: dir + x, listdir(dir))
+        newplaylist += extractfiles(list(files), depth + 1)
+
+    return newplaylist
+
+
 def filedropped(e):
     global playlist, playlistindex
     filenames = split_files(e.data)
     pprint(filenames)
-    music_extentions = ["mp3", "flac", "wav", "ogg"]
 
-    newplaylist = []
-    for file in filenames:
-        is_music = False
-        for extention in music_extentions:
-            if file.endswith("." + extention):
-                is_music = True
-        if is_music:
-            newplaylist.append(file)
-
-    newplaylist.sort()
+    newplaylist = extractfiles(filenames)
+    pprint(newplaylist)
 
     if len(newplaylist) > 0:
         playlist = newplaylist
@@ -196,20 +218,28 @@ def play_file(file):
     if stream is not None:
         stream.close()
 
+    print("loading tags")
     tags = TinyTag.get(file)
     song_title.set(tags.title)
     song_artist.set(tags.artist)
     song_album.set(tags.album)
+    print("tags loaded")
 
+    print("loading audioSegment")
     audio = pydub.AudioSegment.from_file(file)
+    print("audioSegment lodaded")
 
     index = 0
 
+    bytesperframe = audio.channels * audio.sample_width
+
     def callback(in_data, frame_count, time_info, status_flag):
         global index
-        frame_count *= audio.channels * audio.sample_width
+        frame_count *= bytesperframe
         data = audio.raw_data[index : index + frame_count]
         index += frame_count
+        if index > len(audio.raw_data):
+            nextsong()
         return (data, pyaudio.paContinue)
 
     stream = p.open(
